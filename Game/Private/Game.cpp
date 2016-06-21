@@ -3,16 +3,21 @@
 #include "Util/GameUtil.h"
 #include "Framework/GameManager.h"
 
-UGame* UGame::Get()
+UGame* UGame::Get( bool bChecked )
 {
 	UGameManager* GameManager = UGameManager::Get();
-	return GameManager ? GameManager->GetCurrentGame() : nullptr;
+	check( !bChecked || GameManager );
+
+	UGame* Game = GameManager->GetCurrentGame();
+	check( !bChecked || Game );
+
+	return Game;
 }
 
-UGame* UGame::GetOrStart()
+UGame* UGame::GetSafe()
 {	
 	UGameManager* GameManager = UGameManager::Get();
-	check(GameManager);
+	check( GameManager );
 
 	UGame* Game = GameManager->GetCurrentGame();
 	if ( !Game )
@@ -25,68 +30,56 @@ UGame* UGame::GetOrStart()
 
 UGame::UGame( const FObjectInitializer& ObjectInitializer )
 	: Super( ObjectInitializer )
+	, bIsInitialized( false )
 {
 	ObjectTree = ObjectInitializer.CreateDefaultSubobject<UGameObjectTree>( this, "ObjectRootDefault" );
 }
 
 void UGame::Init()
 {
+	ensureMsgf( !bIsInitialized, TEXT("Trying to initialize an already initialized game.") );
+
+	bIsInitialized = true;
+
 	OnInit();
+	BPF_OnInit();
 }
 
 void UGame::Start()
 {
+	Init();
 	SimulationDateTime = InitialSimulationDateTime;
-	SimulationSpeedScale = 1.f;
-	bIsSimulationPaused = false;
-
 	OnStart();
-}
-
-#define GameMapToList(Map, List, Type) {\
-	List.Empty(); \
-	for ( const auto& i : Map ) { \
-		List.Add( Type( i.Key, i.Value ) ); \
-	} \
-}
-
-#define GameListToMap(Map, List, Type) {\
-	Map.Empty(); \
-	for (const auto& i : List) { \
-		Map.Add( i.Name, i.Value ); \
-	} \
+	BPF_OnStart();
 }
 
 bool UGame::LoadFromRecord(const FGameRecord& InRecord)
 {
+	Init();
+
 	if ( ObjectTree->LoadFromRecord( InRecord.ObjectTreeRecord ) == false )
 	{
 		return false;
 	}
 
-	GameListToMap( GameFlags, InRecord.GameFlags, FNamedBoolean );
-	GameListToMap( GameInts, InRecord.GameInts, FNamedInteger );
-	GameListToMap( GameFloats, InRecord.GameFloats, FNamedFloat );
-	GameListToMap( GameStrings, InRecord.GameStrings, FNamedString );
-
 	FMemoryReader MemReader( InRecord.ByteData );
 	FSaveGameArchive Ar( MemReader );
 	this->Serialize( Ar );
+
+	OnLoadedFromRecord();
+	BPF_OnLoadedFromRecord();
 
 	return true;
 }
 
 bool UGame::SaveToRecord(FGameRecord& OutRecord) const
 {
+	ensureMsgf( bIsInitialized, TEXT( "Trying to save an un-initialized game to a record." ) );
+
 	if ( ObjectTree->SaveToRecord( OutRecord.ObjectTreeRecord ) == false )
 	{
 		return false;
 	}
-
-	GameMapToList( GameFlags, OutRecord.GameFlags, FNamedBoolean );
-	GameMapToList( GameInts, OutRecord.GameInts, FNamedInteger );
-	GameMapToList( GameFloats, OutRecord.GameFloats, FNamedFloat );
-	GameMapToList( GameStrings, OutRecord.GameStrings, FNamedString );
 
 	FMemoryWriter MemWriter( OutRecord.ByteData );
 	FSaveGameArchive Ar( MemWriter );
@@ -96,14 +89,14 @@ bool UGame::SaveToRecord(FGameRecord& OutRecord) const
 	return true;
 }
 
-void UGame::Dispose()
+void UGame::Shutdown()
 {
 	if ( IsPendingKill() )
 	{
 		return;
 	}
 
-	OnDispose();
+	OnShutdown();
 
 	ObjectTree->Dispose();
 
@@ -112,8 +105,7 @@ void UGame::Dispose()
 
 UGameObjectTree* UGame::GetObjectTree() const
 {
-	return nullptr;
-	//return ObjectRoot;
+	return ObjectTree;
 }
 
 bool UGame::HasSimulation() const
@@ -169,69 +161,67 @@ void UGame::SetSimulationDateTime(const FDateTime& InDateTime)
 
 void UGame::Tick(float DeltaTime)
 {
-	/*
-	ObjectRoot->Tick( DeltaTime );
+	ObjectTree->Tick( DeltaTime );
 
 	if ( bHasSimulation && bIsSimulationPaused == false )
 	{
 		if ( bIsSimulationAffectsWorldTime )
 		{
-			FTimespan Timespan = SimulationTimespanPerSeconds * DeltaTime;
+			FTimespan Timespan = SimulationTimespanPerSecond * DeltaTime;
 			SimulationDateTime += Timespan;
-			ObjectRoot->SimulationTick( Timespan );
+			ObjectTree->SimulationTick( Timespan );
 		}
 		else
 		{
-			FTimespan Timespan = SimulationTimespanPerSeconds * (DeltaTime * SimulationSpeedScale);
+			FTimespan Timespan = SimulationTimespanPerSecond * (DeltaTime * SimulationSpeedScale);
 			SimulationDateTime += Timespan;
-			ObjectRoot->SimulationTick( Timespan );
+			ObjectTree->SimulationTick( Timespan );
 		}
 	}
-	*/
 }
 
 
 bool UGame::GetGameFlag( FString Name, bool bDefaultValue ) const
 {
-	return GetGameMapValue( GameFlags, Name, bDefaultValue );
+	return GetNamedVar( GameFlags, Name, bDefaultValue );
 }
 
 
 void UGame::SetGameFlag(FString Name, bool bValue)
 {
-	SetGameMapValue( GameFlags, Name, bValue );
+	SetNamedVar( GameFlags, Name, bValue );
 }
 
 
 int32 UGame::GetGameInt(FString Name, int32 DefaultValue) const
 {
-	return GetGameMapValue( GameInts, Name, DefaultValue );
+	return GetNamedVar( GameInts, Name, DefaultValue );
 }
 
 void UGame::SetGameInt(FString Name, int32 Value)
 {
-	SetGameMapValue( GameInts, Name, Value );
+	SetNamedVar( GameInts, Name, Value );
 }
 
 float UGame::GetGameFloat(FString Name, float DefaultValue) const
 {
-	return GetGameMapValue( GameFloats, Name, DefaultValue );
+	return GetNamedVar( GameFloats, Name, DefaultValue );
 }
 
 void UGame::SetGameFloat(FString Name, float Value)
 {
-	SetGameMapValue( GameFloats, Name, Value );
+	SetNamedVar( GameFloats, Name, Value );
 }
 
 
 FString UGame::GetGameString(FString Name, FString DefaultValue) const
 {
-	return GetGameMapValue( GameStrings, Name, DefaultValue );
+	return GetNamedVar( GameStrings, Name, DefaultValue );
 }
 
 void UGame::SetGameString(FString Name, FString Value)
 {
-	SetGameMapValue( GameStrings, Name, Value );
+	SetNamedVar( GameStrings, Name, Value );
 }
 
 UWorld* UGame::GetWorld() const

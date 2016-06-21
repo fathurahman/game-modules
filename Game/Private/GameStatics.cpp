@@ -5,11 +5,27 @@
 #include "Util/GameUtil.h"
 #include "Components/GameTagsComponent.h"
 #include "Framework/SoundBank.h"
+#include "Framework/GameManager.h"
 
 FRandomStream GRandomStream;
 
 
-void UGameStatics::GetObjectsWithTag(FString InTag, TSubclassOf<UObjectWithTags> Class, TArray<UObjectWithTags*>& OutObjects)
+UGameManager* UGameStatics::GetGameManager()
+{
+	return UGameManager::Get();
+}
+
+UGame* UGameStatics::GetGame()
+{
+	return UGame::Get();
+}
+
+UGame* UGameStatics::GetGameSafe()
+{
+	return UGame::GetSafe();
+}
+
+void UGameStatics::GetObjectsWithTag( FString InTag, TSubclassOf<UObjectWithTags> Class, TArray<UObjectWithTags*>& OutObjects )
 {
 	OutObjects.Empty();	
 	for ( TObjectIterator<UObjectWithTags> It; It; ++It )
@@ -136,7 +152,7 @@ USoundBank* UGameStatics::GetSoundBank( USoundBank* SoundBank )
 	return SoundBank;
 }
 
-bool UGameStatics::PlaySFX( USoundBank* SoundBank, FString SoundID )
+bool UGameStatics::BPF_PlaySoundBankEntry( USoundBank* SoundBank, FString SoundID )
 {
 	if ( !SoundBank )
 	{
@@ -145,7 +161,7 @@ bool UGameStatics::PlaySFX( USoundBank* SoundBank, FString SoundID )
 	return SoundBank->Play( SoundID );
 }
 
-bool UGameStatics::PlaySFXAtLocation(USoundBank* SoundBank, FString SoundID, FVector Location, FRotator Rotation)
+bool UGameStatics::BPF_PlaySoundBankEntryAtLocation(USoundBank* SoundBank, FString SoundID, FVector Location, FRotator Rotation)
 {
 	if ( !SoundBank )
 	{
@@ -154,7 +170,7 @@ bool UGameStatics::PlaySFXAtLocation(USoundBank* SoundBank, FString SoundID, FVe
 	return SoundBank->PlayAtLocation( SoundID, Location, Rotation );
 }
 
-UAudioComponent* UGameStatics::PlaySFXAttached(USoundBank* SoundBank, FString SoundID, class USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, FRotator Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed)
+UAudioComponent* UGameStatics::BPF_PlaySoundBankEntryAttached(USoundBank* SoundBank, FString SoundID, class USceneComponent* AttachToComponent, FName AttachPointName, FVector Location, FRotator Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed)
 {
 	if ( !SoundBank )
 	{

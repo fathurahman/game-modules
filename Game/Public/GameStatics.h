@@ -21,6 +21,19 @@ class GAME_API UGameStatics : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 public:
 
+	/** Get the Game Manager object. */
+	UFUNCTION(BlueprintPure, Category="GameStatics")
+	static class UGameManager* GetGameManager();
+
+	/** Get the current game. This function will return null if there is no running game. */
+	UFUNCTION(BlueprintPure, Category="GameStatics")
+	static UGame* GetGame();
+
+	/** Get the current game, if it does not exist then starts a new one. */
+	UFUNCTION(BlueprintPure, Category="GameStatics")
+	static UGame* GetGameSafe();
+
+	/** Get the per-game random stream. */
 	UFUNCTION(BlueprintPure, Category="GameStatics")
 	static void GetRandomStream( FRandomStream& OutRandomStream ) { OutRandomStream = GRandomStream; }
 	
@@ -46,13 +59,13 @@ public:
 	static USoundBank* GetSoundBank( USoundBank* SoundBank );
 
 	UFUNCTION(BlueprintCallable, Category="GameStatics", meta=(DisplayName="PlaySoundBankEntry"))
-	static bool PlaySFX( USoundBank* SoundBank, FString SoundID );
+	static bool BPF_PlaySoundBankEntry( USoundBank* SoundBank, FString SoundID );
 
 	UFUNCTION(BlueprintCallable, Category="GameStatics", meta=(DisplayName="PlaySoundBankEntryAtLocation", AdvancedDisplay="3"))
-	static bool PlaySFXAtLocation( USoundBank* SoundBank, FString SoundID, FVector Location, FRotator Rotation = FRotator::ZeroRotator );
+	static bool BPF_PlaySoundBankEntryAtLocation( USoundBank* SoundBank, FString SoundID, FVector Location, FRotator Rotation = FRotator::ZeroRotator );
 
 	UFUNCTION(BlueprintCallable, Category="GameStatics", meta=(DisplayName="PlaySoundBankEntryAttached", AdvancedDisplay = "3"))
-	static UAudioComponent* PlaySFXAttached( USoundBank* SoundBank, FString SoundID, class USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false);
+	static UAudioComponent* BPF_PlaySoundBankEntryAttached( USoundBank* SoundBank, FString SoundID, class USceneComponent* AttachToComponent, FName AttachPointName = NAME_None, FVector Location = FVector(ForceInit), FRotator Rotation = FRotator::ZeroRotator, EAttachLocation::Type LocationType = EAttachLocation::KeepRelativeOffset, bool bStopWhenAttachedToDestroyed = false);
 
 	UFUNCTION(BlueprintCallable, Category="GameStatics", meta=(ExpandEnumAsExecs="OutResult", DisplayName="LoadTexture2DFromFile"))
 	static UTexture2D* BPF_LoadTexture2DFromFile(const FString& FullFilePath, EImageFileFormat ImageFileFormat, int32& OutWidth, int32& OutHeight, ESuccess& OutResult);

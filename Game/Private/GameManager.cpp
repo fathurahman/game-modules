@@ -19,7 +19,7 @@ UGameManager* UGameManager::GetChecked()
 UGameManager::UGameManager( const FObjectInitializer& ObjectInitializer )
 	: Super( ObjectInitializer )
 {
-	SaveGameClass = USaveGameBase::StaticClass();
+	SaveGameClass = USaveGameObject::StaticClass();
 }
 
 UGame* UGameManager::GetCurrentGame() const
@@ -39,7 +39,6 @@ UGame* UGameManager::StartGame()
 	}
 
 	CurrentGame = NewObject<UGame>( Class );
-	CurrentGame->Init();
 	CurrentGame->Start();
 
 	return CurrentGame;
@@ -49,14 +48,14 @@ void UGameManager::StopGame()
 {
 	if ( CurrentGame )
 	{
-		CurrentGame->Dispose();
+		CurrentGame->Shutdown();
 		CurrentGame = nullptr;
 	}
 }
 
 bool UGameManager::LoadGame( const FString& SlotName, int32 UserIndex )
 {
-	USaveGameBase* SaveGameObject = Cast<USaveGameBase>( UGameplayStatics::LoadGameFromSlot( SlotName, UserIndex ) );
+	USaveGameObject* SaveGameObject = Cast<USaveGameObject>( UGameplayStatics::LoadGameFromSlot( SlotName, UserIndex ) );
 
 	if ( !SaveGameObject )
 	{
@@ -72,7 +71,6 @@ bool UGameManager::LoadGame( const FString& SlotName, int32 UserIndex )
 		return nullptr;
 	}
 	CurrentGame = NewObject<UGame>( Class );
-	CurrentGame->Init();
 	if ( CurrentGame->LoadFromRecord( SaveGameObject->GameRecord ) == false )
 	{
 		StopGame();
@@ -82,7 +80,7 @@ bool UGameManager::LoadGame( const FString& SlotName, int32 UserIndex )
 	// TODO: Load world
 
 	PostLoadGame( SaveGameObject );
-	ReceivePostLoadGame( SaveGameObject );
+	BPF_PostLoadGame( SaveGameObject );
 
 	return true;
 }
@@ -94,11 +92,11 @@ bool UGameManager::SaveGame( const FString& SlotName, int32 UserIndex )
 		return false;
 	}
 
-	USaveGameBase* SaveGameObject = Cast<USaveGameBase>( UGameplayStatics::CreateSaveGameObject( SaveGameClass.ResolveClass() ) );
+	USaveGameObject* SaveGameObject = Cast<USaveGameObject>( UGameplayStatics::CreateSaveGameObject( SaveGameClass.ResolveClass() ) );
 	check( SaveGameObject );
 
 	PreSaveGame( SaveGameObject );
-	ReceivePreSaveGame( SaveGameObject );
+	BPF_PreSaveGame( SaveGameObject );
 
 	// TODO: Save world
 
