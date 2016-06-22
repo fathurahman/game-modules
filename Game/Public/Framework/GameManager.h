@@ -101,7 +101,7 @@ protected:
 	UPROPERTY( EditAnywhere, Category = "Classes", meta=(MetaClass="Game", AllowAbstract="False") )
 	FStringClassReference GameClass;
 
-	UPROPERTY(EditAnywhere, NoClear, Category="GameManager", meta=(MetaClass="SaveGameBase", AllowAbstract="False"))
+	UPROPERTY( EditAnywhere, Category="GameManager", meta=(MetaClass="SaveGameObject", AllowAbstract="False") )
 	FStringClassReference SaveGameClass;
 
 	/** The current running game. */

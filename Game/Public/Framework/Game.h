@@ -30,21 +30,21 @@ public:
 	static UGame* Get( bool bChecked = false );
 
 	/** Get the currently running game. */
-	template<class T=UGame>
-	static FORCEINLINE T* Get( bool bChecked = false )
-	{
-		return bChecked ? CastChecked<T>( Get(bChecked) ) :  Cast<T>( Get(bChecked) );
-	}
+	//template<class T=UGame>
+	//static FORCEINLINE T* Get( bool bChecked = false )
+	//{
+	//	return bChecked ? CastChecked<T>( Get(bChecked) ) :  Cast<T>( Get(bChecked) );
+	//}
 
 	/** Get the currently running game, if it does not exist then starts a new one. */
 	static UGame* GetSafe();
 
 	/** Get the currently running game, if it does not exist then starts a new one. */
-	template<class T=UGame>
-	static FORCEINLINE T* GetSafe()
-	{
-		return Cast<T>( GetSafe() );
-	}
+	//template<class T=UGame>
+	//static FORCEINLINE T* GetSafe()
+	//{
+	//	return Cast<T>( GetSafe() );
+	//}
 
 	//////////////////////////////////////////////////////////////////////////
 
