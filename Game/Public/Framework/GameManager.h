@@ -7,19 +7,6 @@
 #include "Game.h"
 #include "GameManager.generated.h"
 
-USTRUCT()
-struct FBlueprintGeneratedClassCollection
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY()
-	FStringClassReference ParentClass;
-
-	UPROPERTY()
-	TArray<FStringClassReference> GeneratedClasses;
-    
-};
-
 /**
 * Save Game Object.
 * It can be used as-is, or it can be derived to add more properties to the save game.
@@ -79,18 +66,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GameManager")
 	bool SaveGame( const FString& SlotName, int32 UserIndex = 0 );
 
-	// TODO: move this to GameDataManager
-	UFUNCTION(BlueprintPure, Category="GameSystem")
-	USoundBank* GetSoundBank( const FString& ID ) const;
-
-	// TODO: move this to GameDataManager
-	UFUNCTION(BlueprintPure, Category = "GameManager")
-	void GetBlueprintGeneratedClassReferences( UClass* ParentClass, TArray<FStringClassReference>& OutClassReferences ) const;
-
-	// TODO: move this to GameDataManager
-	UFUNCTION(BlueprintPure, Category="GameManager")
-	void GetBlueprintGeneratedClasses( UClass* ParentClass, TArray<UClass*>& OutClasses ) const;
-
 	// UGameInstance interface
 	virtual void Init() override;
 	virtual void Shutdown() override;
@@ -101,7 +76,7 @@ protected:
 	UPROPERTY( EditAnywhere, Category = "Classes", meta=(MetaClass="Game", AllowAbstract="False") )
 	FStringClassReference GameClass;
 
-	UPROPERTY(EditAnywhere, NoClear, Category="GameManager", meta=(MetaClass="SaveGameBase", AllowAbstract="False"))
+	UPROPERTY( EditAnywhere, Category="GameManager", meta=(MetaClass="SaveGameObject", AllowAbstract="False") )
 	FStringClassReference SaveGameClass;
 
 	/** The current running game. */
@@ -126,13 +101,5 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="GameManager", meta=(DisplayName="PostLoadGame"))
 	void BPF_PostLoadGame( USaveGameObject* SaveGame );
 
-	/** TODO: move this to GameDataManager. */
-	UPROPERTY()
-	TMap<FString, TAssetPtr<USoundBank>> SoundBanks;
-
-	// TBD: Blueprint generated class collection will be automatically populated by GameEd.
-	// TODO: move this to GameDataManager.
-	UPROPERTY(VisibleDefaultsOnly, AdvancedDisplay, Category="AssetCollection")
-	TArray<FBlueprintGeneratedClassCollection> BlueprintGeneratedClassCollections;
 
 };

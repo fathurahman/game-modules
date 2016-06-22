@@ -4,6 +4,7 @@
 #include "Util/GameUtil.h"
 #include "Framework/Game.h"
 #include "Framework/GameManager.h"
+#include "Framework/GameDataManager.h"
 #include "Interfaces/IImageWrapperModule.h"
 #include "Util/BlueprintClassRegistry.h"
 
@@ -71,17 +72,16 @@ UGameObject* StaticCreateGameObject( TSubclassOf<UGameObject> Class )
 
 bool PlaySoundBankEntry(const FString& SoundBankID, const FString& SoundID, UWorld* World )
 {
-	UGameManager* GameInstance = UGameManager::Get();
-	if ( !GameInstance )
+	UGameDataManager* DataManager = UGameDataManager::Get();
+	if ( !DataManager )
 	{
 		return false;
 	}
-	USoundBank* SoundBank = GameInstance->GetSoundBank( SoundBankID );
+	USoundBank* SoundBank = DataManager->GetSoundBank( SoundBankID );
 	if ( !SoundBank )
 	{
 		return false;
-	}
-	
+	}	
 	return SoundBank->Play( SoundID, World );
 }
 
@@ -96,12 +96,12 @@ bool PlaySoundBankEntry( const USoundBank* SoundBank, const FString& SoundID, UW
 
 bool PlaySoundBankEntryAtLocation( const FString& SoundBankID, const FString& SoundID, const FVector& Location, const FRotator& Rotation, UWorld* World )
 {
-	UGameManager* GameInstance = UGameManager::Get();
-	if ( !GameInstance )
+	UGameDataManager* DataManager = UGameDataManager::Get();
+	if ( !DataManager )
 	{
 		return false;
 	}
-	USoundBank* SoundBank = GameInstance->GetSoundBank( SoundBankID );
+	USoundBank* SoundBank = DataManager->GetSoundBank( SoundBankID );
 	if ( !SoundBank )
 	{
 		return false;
@@ -111,15 +111,15 @@ bool PlaySoundBankEntryAtLocation( const FString& SoundBankID, const FString& So
 
 UAudioComponent* PlaySoundBankEntryAttached(const FString& SoundBankID, const FString& SoundID, class USceneComponent* AttachToComponent, const FName& AttachPointName, const FVector& Location, const FRotator& Rotation, EAttachLocation::Type LocationType, bool bStopWhenAttachedToDestroyed)
 {
-	UGameManager* GameInstance = UGameManager::Get();
-	if ( !GameInstance )
+	UGameDataManager* DataManager = UGameDataManager::Get();
+	if ( !DataManager )
 	{
-		return nullptr;
+		return false;
 	}
-	USoundBank* SoundBank = GameInstance->GetSoundBank( SoundBankID );
+	USoundBank* SoundBank = DataManager->GetSoundBank( SoundBankID );
 	if ( !SoundBank )
 	{
-		return nullptr;
+		return false;
 	}
 	return SoundBank->PlayAttached( SoundID, AttachToComponent, AttachPointName, Location, Rotation, LocationType, bStopWhenAttachedToDestroyed );
 }

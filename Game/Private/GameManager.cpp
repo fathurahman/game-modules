@@ -108,41 +108,10 @@ bool UGameManager::SaveGame( const FString& SlotName, int32 UserIndex )
 	return UGameplayStatics::SaveGameToSlot( SaveGameObject, SlotName, UserIndex );
 }
 
-USoundBank* UGameManager::GetSoundBank( const FString& ID ) const
-{
-	const TAssetPtr<USoundBank> *pAssetPtr = SoundBanks.Find( ID );
-	if ( !pAssetPtr )
-	{
-		return nullptr;
-	}
-	return GetOrLoadAssetFromPtr( *pAssetPtr );
-}
-
-void UGameManager::GetBlueprintGeneratedClassReferences( UClass* ParentClass, TArray<FStringClassReference>& OutClassReferences ) const
-{
-	// TODO: implement
-}
-
-void UGameManager::GetBlueprintGeneratedClasses( UClass* ParentClass, TArray<UClass*>& OutClasses ) const
-{
-	// TODO: implement
-}
-
 void UGameManager::Init()
 {
 	g_Instance = this;
 	Super::Init();
-
-	TArray<TAssetPtr<USoundBank>> SoundBankAssetPtrList;
-	GetAssetPtrs( SoundBankAssetPtrList );
-
-	SoundBanks.Empty();
-	for ( TAssetPtr<USoundBank> AssetPtr : SoundBankAssetPtrList )
-	{
-		USoundBank* Bank = GetOrLoadAssetFromPtr( AssetPtr );
-		Bank->SetGameInstance( this );
-		SoundBanks.Add( Bank->GetID(), AssetPtr );
-	}
 }
 
 void UGameManager::Shutdown()
