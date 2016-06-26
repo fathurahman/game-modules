@@ -292,3 +292,131 @@ FString ClassFlagsToString( uint32 ClassFlags )
 
 	return Result;
 }
+
+GAME_API FString PropertyFlagsToString( uint64 PropertyFlags )
+{
+	FString Result;
+	TestAndAddFlag(Result, PropertyFlags, CPF_Edit);
+	TestAndAddFlag(Result, PropertyFlags, CPF_ConstParm);
+	TestAndAddFlag(Result, PropertyFlags, CPF_BlueprintVisible);
+	TestAndAddFlag(Result, PropertyFlags, CPF_ExportObject);
+	TestAndAddFlag(Result, PropertyFlags, CPF_BlueprintReadOnly);				
+	TestAndAddFlag(Result, PropertyFlags, CPF_Net);								
+	TestAndAddFlag(Result, PropertyFlags, CPF_EditFixedSize);					
+	TestAndAddFlag(Result, PropertyFlags, CPF_Parm);							
+	TestAndAddFlag(Result, PropertyFlags, CPF_OutParm);							
+	TestAndAddFlag(Result, PropertyFlags, CPF_ZeroConstructor);					
+	TestAndAddFlag(Result, PropertyFlags, CPF_ReturnParm);						
+	TestAndAddFlag(Result, PropertyFlags, CPF_DisableEditOnTemplate);			
+	TestAndAddFlag(Result, PropertyFlags, CPF_Transient);   					
+	TestAndAddFlag(Result, PropertyFlags, CPF_Config);      					
+	TestAndAddFlag(Result, PropertyFlags, CPF_DisableEditOnInstance);			
+	TestAndAddFlag(Result, PropertyFlags, CPF_EditConst);   					
+	TestAndAddFlag(Result, PropertyFlags, CPF_GlobalConfig);					
+	TestAndAddFlag(Result, PropertyFlags, CPF_InstancedReference);				
+	TestAndAddFlag(Result, PropertyFlags, CPF_DuplicateTransient);				
+	TestAndAddFlag(Result, PropertyFlags, CPF_SubobjectReference);				
+	TestAndAddFlag(Result, PropertyFlags, CPF_SaveGame);						
+	TestAndAddFlag(Result, PropertyFlags, CPF_NoClear);							
+	TestAndAddFlag(Result, PropertyFlags, CPF_ReferenceParm);					
+	TestAndAddFlag(Result, PropertyFlags, CPF_BlueprintAssignable);				
+	TestAndAddFlag(Result, PropertyFlags, CPF_Deprecated);  					
+	TestAndAddFlag(Result, PropertyFlags, CPF_IsPlainOldData);
+	TestAndAddFlag(Result, PropertyFlags, CPF_RepSkip);
+	TestAndAddFlag(Result, PropertyFlags, CPF_RepNotify);
+	TestAndAddFlag(Result, PropertyFlags, CPF_Interp);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NonTransactional);
+	TestAndAddFlag(Result, PropertyFlags, CPF_EditorOnly);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NoDestructor);
+	TestAndAddFlag(Result, PropertyFlags, CPF_AutoWeak);
+	TestAndAddFlag(Result, PropertyFlags, CPF_ContainsInstancedReference);
+	TestAndAddFlag(Result, PropertyFlags, CPF_AssetRegistrySearchable);
+	TestAndAddFlag(Result, PropertyFlags, CPF_SimpleDisplay);
+	TestAndAddFlag(Result, PropertyFlags, CPF_AdvancedDisplay);
+	TestAndAddFlag(Result, PropertyFlags, CPF_Protected);
+	TestAndAddFlag(Result, PropertyFlags, CPF_BlueprintCallable);
+	TestAndAddFlag(Result, PropertyFlags, CPF_BlueprintAuthorityOnly);
+	TestAndAddFlag(Result, PropertyFlags, CPF_TextExportTransient);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NonPIEDuplicateTransient);
+	TestAndAddFlag(Result, PropertyFlags, CPF_ExposeOnSpawn);
+	TestAndAddFlag(Result, PropertyFlags, CPF_PersistentInstance);
+	TestAndAddFlag(Result, PropertyFlags, CPF_UObjectWrapper);
+	TestAndAddFlag(Result, PropertyFlags, CPF_HasGetValueTypeHash);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NativeAccessSpecifierPublic);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NativeAccessSpecifierProtected);
+	TestAndAddFlag(Result, PropertyFlags, CPF_NativeAccessSpecifierPrivate);
+
+	return Result;
+}
+
+
+void TraceObject( const UObject* Object, const FString& Title, const TArray<FName>& PropertyNamesToTrace, int32 TraceObjectFlags )
+{
+	// Object validity check
+	if ( !Object )
+	{
+		return;
+	}
+
+	// Title
+	TraceNoCurLine( "%s [%s] : ", Title.IsEmpty() ? TEXT("TraceObject") : *Title, *Object->GetName() );
+
+	// Trace object details
+	if ( TraceObjectFlags & TOF_OBJECT_DETAILS )
+	{
+		TraceNoCurLine( "  Object URL	: %s", *Object->GetFullName() );
+		TraceNoCurLine( "  Object Flags	: %s", *ObjectFlagsToString( Object->GetFlags() ) );
+	}
+
+	// Trace class
+	UClass* Class = Object->GetClass();
+	if ( Class && TraceObjectFlags & TOF_CLASS_DETAILS)
+	{
+		TArray<FString> ClassNames;
+		ClassNames.Add( Class->GetName() );
+		UClass* SuperClass = Class->GetSuperClass();
+		while (SuperClass)
+		{
+			ClassNames.Insert( SuperClass->GetName(), 0 );
+			SuperClass = SuperClass->GetSuperClass();
+		}
+
+		TraceNoCurLine( "  Class URL      : %s", *Class->GetFullName() );
+		TraceNoCurLine( "  Class Flags    : %s", *ClassFlagsToString(Class->GetClassFlags()) );
+		TraceNoCurLine( "  Class Hierarchy: %s", *FString::Join( ClassNames, TEXT("->") ) );
+	}
+
+	// Trace property
+	if ( PropertyNamesToTrace.Num() > 0 )
+	{
+		for ( const FName& PropertyName : PropertyNamesToTrace )
+		{
+			const void* ObjectPtr = reinterpret_cast<const void *>( Object );
+
+			UProperty* Property = Class->FindPropertyByName(PropertyName);
+			if ( !Property )
+			{
+				TraceNoCurLine("    (no property with name : '%s')", *PropertyName.ToString() );
+				continue;
+			}
+			
+			uint64 PropertyFlags = Property->GetPropertyFlags();
+
+			FString PropertyValueString;
+			const void* PropertyValuePtr = Property->ContainerPtrToValuePtr<const void*>( ObjectPtr );
+			Property->ExportTextItem( PropertyValueString, PropertyValuePtr, nullptr, nullptr, PPF_None );
+			
+			if ( TraceObjectFlags & TOF_PROPERTY_DETAILS )
+			{
+				TraceNoCurLine( "  Property : %s", *PropertyName.ToString() );
+				TraceNoCurLine( "    URL    : %s", *Property->GetFullName() );
+				TraceNoCurLine( "    Flags  : %s", *PropertyFlagsToString( Property->GetPropertyFlags() ) );
+				TraceNoCurLine( "    Value  : %s", *PropertyValueString );
+			}
+			else
+			{
+				TraceNoCurLine( "    %s = %s", *PropertyName.ToString(), *PropertyValueString );
+			}			
+		}
+	}
+}

@@ -302,8 +302,33 @@ GAME_API UTexture2D* LoadTexture2DFromFile( const FString& FilePath, EImageFileF
 // Debug Utilities
 //////////////////////////////////////////////////////////////////////////
 
+/** Convert object flags to string. */
 GAME_API FString ObjectFlagsToString( EObjectFlags ObjectFlags );
+
+/** Convert class flags to string. */
 GAME_API FString ClassFlagsToString( uint32 ClassFlags );
+
+/** Convert property flags to string. */
+GAME_API FString PropertyFlagsToString( uint64 PropertyFlags );
+
+// Flags for TraceObject
+#define TOF_OBJECT_DETAILS		0x01
+#define TOF_CLASS_DETAILS		0x02
+#define TOF_PROPERTY_DETAILS	0x08
+
+#define TOF_ALL_DETAILS			0xff
+#define TOF_NONE				0x00
+// End of flags for TraceObject
+
+/**
+* Print information of an object to the log.
+* @note: This function only works in debug builds. (DebugGame or DebugGameEditor), it does nothing in Development or Shipping build.
+* @param	Object					The object whose information will be written to the log.
+* @param	Title					The title that will be added at the beginning of the information.
+* @param	PropertyNameToTrace		List of property names to be included in the the information.
+* @param	TraceObjectFlags		Bit flags of what details to be added to the information, the default value is to print all details.
+*/
+GAME_API void TraceObject( const UObject* Object, const FString& Title = TEXT(""), const TArray<FName>& PropertyNamesToTrace = TArray<FName>(), int32 TraceObjectFlags = TOF_ALL_DETAILS  );
 
 //////////////////////////////////////////////////////////////////////////
 // World Related

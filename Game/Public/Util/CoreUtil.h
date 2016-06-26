@@ -20,6 +20,10 @@
 #define TRACE_LOG_CATEGORY LogTemp
 #endif
 
+#ifndef TRACE_LOG_VERBOSITY
+#define TRACE_LOG_VERBOSITY Log
+#endif
+
 #ifndef PRINT_MESSAGE_DURATION
 #define PRINT_MESSAGE_DURATION 5.f
 #endif
@@ -35,9 +39,11 @@
 
 // Trace macros
 #ifdef UE_BUILD_DEBUG
-	#define Trace(Format, ...)			UE_LOG( TRACE_LOG_CATEGORY, Warning,	TEXT("%s: "Format), *STR_CUR_FILE_LINE, ##__VA_ARGS__ )
+	#define Trace(Format, ...)			UE_LOG( TRACE_LOG_CATEGORY, TRACE_LOG_VERBOSITY, TEXT("%s: "Format), *STR_CUR_FILE_LINE, ##__VA_ARGS__ )
+	#define TraceNoCurLine(Format, ...)	UE_LOG( TRACE_LOG_CATEGORY, TRACE_LOG_VERBOSITY, TEXT(Format), ##__VA_ARGS__ )
 #else
 	#define Trace(Format, ...)
+	#define TraceNoCurLine(Format, ...)
 #endif
 
 // Print message to screen macro
